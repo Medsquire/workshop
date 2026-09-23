@@ -40,11 +40,13 @@ async function ensureDbConnected() {
     isMongoConnected = true;
     return true;
   }
-  if (!MONGODB_URI) {
+  const uri = getMongoURI();
+  if (!uri) {
+    console.error('❌ MongoDB configuration not found in environment.');
     return false;
   }
   try {
-    await mongoose.connect(MONGODB_URI, { dbName: DB_NAME });
+    await mongoose.connect(uri, { dbName: DB_NAME, serverSelectionTimeoutMS: 10000 });
     isMongoConnected = true;
     console.log(`✅ Connected to MongoDB Cluster (${DB_NAME} database -> ${COLLECTION_NAME} collection)`);
     return true;
@@ -132,7 +134,7 @@ app.post('/api/register', async (req, res) => {
     } else {
       return res.status(503).json({ 
         success: false, 
-        message: 'Database connection offline. Details could not be saved to MongoDB database.' 
+        message: 'Database connection offline. Details could not be saved to database.' 
       });
     }
   } catch (error) {
@@ -180,7 +182,7 @@ app.post('/api/update-track', async (req, res) => {
   }
 });
 
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`🚀 Workshop Backend Server running on http://localhost:${PORT}`);
   });
