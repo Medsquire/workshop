@@ -13,49 +13,52 @@ const corsOrigin = process.env.CORS_ORIGIN || '*';
 app.use(cors({ origin: corsOrigin === '*' ? '*' : corsOrigin.split(',') }));
 app.use(express.json({ limit: '10mb' }));
 
-// Helper to construct MongoDB Connection String dynamically from .env
+// Helper to construct MongoDB Connection String
 function getMongoURI() {
   if (process.env.MONGODB_URI) {
     return process.env.MONGODB_URI;
   }
   
-  // Use fallback values if environment variables are not set (e.g., on Vercel deployments)
-  const MONGODB_USER = process.env.MONGODB_USER || 'info_db_user';
-  const MONGODB_PASSWORD = process.env.MONGODB_PASSWORD || 'yRcarQvVytfAjpTD';
-  const MONGODB_HOST = process.env.MONGODB_HOST || 'project.emlrxdt.mongodb.net';
-  const MONGODB_DB = process.env.MONGODB_DB || 'workshop';
-  const MONGODB_lasturl = process.env.MONGODB_lasturl || 'retryWrites=true&w=majority';
-
-  if (MONGODB_USER && MONGODB_PASSWORD && MONGODB_HOST) {
-    const user = encodeURIComponent(MONGODB_USER);
-    const pass = encodeURIComponent(MONGODB_PASSWORD);
-    const db = MONGODB_DB;
-    const lastUrl = MONGODB_lasturl.trim();
-    return `mongodb+srv://${user}:${pass}@${MONGODB_HOST}/${db}?${lastUrl}`;
-  }
-  return '';
+  // Use fallback URI if environment variable is not set (e.g., on Vercel deployments without env vars)
+  return 'mongodb+srv://info_db_user:yRcarQvVytfAjpTD@project.emlrxdt.mongodb.net/workshop?retryWrites=true&w=majority';
 }
 
 const MONGODB_URI = getMongoURI();
 const DB_NAME = process.env.MONGODB_DB || 'workshop';
 const COLLECTION_NAME = process.env.MONGODB_COLLECTION || 'users';
 
-let isMongoConnected = false;
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 async function ensureDbConnected() {
-  if (mongoose.connection.readyState === 1) {
-    isMongoConnected = true;
+  if (cached.conn && mongoose.connection.readyState === 1) {
     return true;
   }
+  
   const uri = getMongoURI();
   if (!uri) {
     console.error('❌ MongoDB configuration not found in environment.');
     return false;
   }
+  
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(uri, { 
+      dbName: DB_NAME, 
+      serverSelectionTimeoutMS: 5000 
+    }).then(mongoose => {
+      console.log(`✅ Connected to MongoDB Cluster (${DB_NAME} database -> ${COLLECTION_NAME} collection)`);
+      return mongoose;
+    }).catch(err => {
+      cached.promise = null;
+      throw err;
+    });
+  }
+
   try {
-    await mongoose.connect(uri, { dbName: DB_NAME, serverSelectionTimeoutMS: 10000 });
-    isMongoConnected = true;
-    console.log(`✅ Connected to MongoDB Cluster (${DB_NAME} database -> ${COLLECTION_NAME} collection)`);
+    cached.conn = await cached.promise;
     return true;
   } catch (err) {
     console.error('❌ MongoDB Connection Error:', err.message);
