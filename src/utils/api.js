@@ -1,5 +1,5 @@
 // Frontend API utility connecting to MongoDB backend + localStorage fallback
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_BASE_URL || '/api');
 
 export async function registerStudentApi(studentData) {
   try {

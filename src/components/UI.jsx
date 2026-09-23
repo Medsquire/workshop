@@ -370,6 +370,29 @@ const Registration = ({ onSubmitRegistration }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dbErrorDetails, setDbErrorDetails] = useState(null);
 
+  const calculateTimeLeft = () => {
+    const eventDate = new Date('2026-10-02T10:00:00+05:30');
+    const difference = eventDate - new Date();
+    
+    if (difference > 0) {
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60)
+      };
+    }
+    return { days: 0, hours: 0, minutes: 0 };
+  };
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   const handlePhoneChange = (e) => {
     // Restrict strictly to 10 numeric digits
     const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
@@ -431,6 +454,28 @@ Please help me confirm my seat for AI Sprint 2.0!`;
 
     setIsSubmitting(true);
 
+    let finalPhotoUrl = photoUrl;
+    
+    if (finalPhotoUrl && finalPhotoUrl.startsWith('data:image')) {
+      try {
+        const base64Data = finalPhotoUrl.split(',')[1];
+        const imgFormData = new FormData();
+        imgFormData.append('image', base64Data);
+        
+        const imgbbRes = await fetch('https://api.imgbb.com/1/upload?key=37bda322a74f0fd35f2f0e0631cbf5ea', {
+          method: 'POST',
+          body: imgFormData
+        });
+        
+        const imgbbData = await imgbbRes.json();
+        if (imgbbData && imgbbData.success) {
+          finalPhotoUrl = imgbbData.data.url;
+        }
+      } catch (e) {
+        console.error('Imgbb upload failed', e);
+      }
+    }
+
     const randomHex = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0').toUpperCase();
     const studentId = `MS26-${randomHex}`;
 
@@ -446,7 +491,7 @@ Please help me confirm my seat for AI Sprint 2.0!`;
       joiningType: formData.joiningType,
       teamName: formData.teamName ? formData.teamName.trim() : '',
       missionTrack: 'AI AGENTS',
-      photoUrl: photoUrl,
+      photoUrl: finalPhotoUrl,
       registeredAt: new Date().toISOString()
     };
 
@@ -506,15 +551,15 @@ Please help me confirm my seat for AI Sprint 2.0!`;
           
           <motion.div variants={fadeUp} style={{ display: 'flex', gap: '2rem' }}>
             <div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'Outfit' }}>11</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'Outfit' }}>{timeLeft.days.toString().padStart(2, '0')}</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>DAYS</div>
             </div>
             <div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'Outfit' }}>21</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'Outfit' }}>{timeLeft.hours.toString().padStart(2, '0')}</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>HOURS</div>
             </div>
             <div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'Outfit' }}>45</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'Outfit' }}>{timeLeft.minutes.toString().padStart(2, '0')}</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>MINS</div>
             </div>
           </motion.div>
