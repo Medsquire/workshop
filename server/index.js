@@ -18,12 +18,19 @@ function getMongoURI() {
   if (process.env.MONGODB_URI) {
     return process.env.MONGODB_URI;
   }
-  const { MONGODB_USER, MONGODB_PASSWORD, MONGODB_HOST, MONGODB_DB, MONGODB_lasturl } = process.env;
+  
+  // Use fallback values if environment variables are not set (e.g., on Vercel deployments)
+  const MONGODB_USER = process.env.MONGODB_USER || 'info_db_user';
+  const MONGODB_PASSWORD = process.env.MONGODB_PASSWORD || 'yRcarQvVytfAjpTD';
+  const MONGODB_HOST = process.env.MONGODB_HOST || 'project.emlrxdt.mongodb.net';
+  const MONGODB_DB = process.env.MONGODB_DB || 'workshop';
+  const MONGODB_lasturl = process.env.MONGODB_lasturl || 'retryWrites=true&w=majority';
+
   if (MONGODB_USER && MONGODB_PASSWORD && MONGODB_HOST) {
     const user = encodeURIComponent(MONGODB_USER);
     const pass = encodeURIComponent(MONGODB_PASSWORD);
-    const db = MONGODB_DB || 'workshop';
-    const lastUrl = (MONGODB_lasturl || 'retryWrites=true&w=majority').trim();
+    const db = MONGODB_DB;
+    const lastUrl = MONGODB_lasturl.trim();
     return `mongodb+srv://${user}:${pass}@${MONGODB_HOST}/${db}?${lastUrl}`;
   }
   return '';
