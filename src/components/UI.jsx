@@ -34,7 +34,8 @@ const staggerContainer = {
 };
 
 // 1. Navigation
-const Navigation = ({ onOpenLogin }) => {
+// 1. Navigation
+const Navigation = ({ onOpenLogin, onRegisterClick }) => {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
@@ -82,18 +83,78 @@ const Navigation = ({ onOpenLogin }) => {
           <LogIn size={16} /> LOGIN
         </button>
 
-        <a href="#register" className="btn-primary" style={{ padding: '8px 20px', fontSize: '0.85rem' }}>REGISTER</a>
+        <a 
+          href="#register-form" 
+          onClick={onRegisterClick}
+          className="btn-primary" 
+          style={{ padding: '8px 20px', fontSize: '0.85rem' }}
+        >
+          REGISTER
+        </a>
       </div>
       
-      <div style={{ display: window.innerWidth < 768 ? 'block' : 'none' }} onClick={() => setIsOpen(!isOpen)}>
-        {isOpen ? <X color="white" /> : <Menu color="white" />}
+      <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} onClick={() => setIsOpen(!isOpen)}>
+        {isOpen ? <X color="white" size={24} /> : <Menu color="white" size={24} />}
       </div>
+
+      {/* Mobile Navigation Menu Dropdown */}
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          width: '100%',
+          background: 'rgba(5, 7, 15, 0.98)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid var(--panel-border)',
+          padding: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.2rem',
+          zIndex: 49,
+          boxShadow: '0 20px 40px rgba(0,0,0,0.8)'
+        }}>
+          <a href="#home" onClick={() => setIsOpen(false)} style={{ color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}>HOME</a>
+          <a href="#missions" onClick={() => setIsOpen(false)} style={{ color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}>MISSIONS</a>
+          <a href="#schedule" onClick={() => setIsOpen(false)} style={{ color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}>SCHEDULE</a>
+          <a href="#location" onClick={() => setIsOpen(false)} style={{ color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}>LOCATION</a>
+          
+          <button 
+            onClick={() => { setIsOpen(false); onOpenLogin(); }}
+            style={{ 
+              background: 'rgba(10, 132, 255, 0.15)', 
+              border: '1px solid rgba(10, 132, 255, 0.5)', 
+              color: '#0A84FF', 
+              padding: '12px', 
+              borderRadius: '8px', 
+              fontWeight: 700, 
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <LogIn size={18} /> LOGIN & VIEW PASS
+          </button>
+
+          <a 
+            href="#register-form" 
+            onClick={(e) => { setIsOpen(false); onRegisterClick(e); }}
+            className="btn-primary" 
+            style={{ padding: '12px', justifyContent: 'center', fontSize: '0.95rem' }}
+          >
+            🚀 REGISTER NOW
+          </a>
+        </div>
+      )}
     </nav>
   );
 };
 
 // 2. Hero Section
-const Hero = () => (
+const Hero = ({ onRegisterClick }) => (
   <section id="home" className="section-container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '7.5rem' }}>
     <motion.div variants={staggerContainer} initial="hidden" animate="visible" style={{ maxWidth: '950px', margin: '0 auto', textAlign: 'center' }}>
       
@@ -133,7 +194,7 @@ const Hero = () => (
       </motion.div>
       
       <motion.div variants={fadeUp} style={{ display: 'flex', gap: '1.2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <a href="#register" className="btn-primary">
+        <a href="#register-form" onClick={onRegisterClick} className="btn-primary">
           REGISTER & CONFIRM SEAT <ChevronRight className="icon-arrow" />
         </a>
         <a href="#missions" className="btn-secondary">
@@ -149,7 +210,7 @@ const Hero = () => (
 );
 
 // Concept section
-const ConceptSection = () => (
+const ConceptSection = ({ onRegisterClick }) => (
   <section className="section-container darker">
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
       <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} style={{ textAlign: 'center', marginBottom: '5rem' }}>
@@ -175,7 +236,7 @@ const ConceptSection = () => (
           Use AI, modern tools, and our expert guidance to turn your idea into a working prototype product today.
         </motion.p>
         <motion.div variants={fadeUp}>
-          <a href="#register" className="btn-primary">REGISTER FOR WORKSHOP <ChevronRight className="icon-arrow" /></a>
+          <a href="#register-form" onClick={onRegisterClick} className="btn-primary">REGISTER FOR WORKSHOP <ChevronRight className="icon-arrow" /></a>
           <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Solo or Team — both are welcome.</p>
         </motion.div>
       </motion.div>
@@ -220,7 +281,7 @@ const BenefitsSection = () => (
   </section>
 );
 
-const Missions = () => {
+const Missions = ({ onRegisterClick }) => {
   const missions = [
     { icon: '🤖', title: 'AI AGENTS', desc: 'Build an AI assistant that can reason, use tools and complete tasks.' },
     { icon: '👁️', title: 'AI VISION', desc: 'Build computer-vision projects using images or cameras.' },
@@ -246,7 +307,7 @@ const Missions = () => {
               <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{m.icon}</div>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.5rem' }}>{m.title}</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', flexGrow: 1, marginBottom: '1.5rem' }}>{m.desc}</p>
-              <a href="#register" style={{ textDecoration: 'none', fontSize: '0.8rem', color: 'var(--neon-cyan)', fontWeight: 700, letterSpacing: '1px' }}>CHOOSE THIS TRACK →</a>
+              <a href="#register-form" onClick={onRegisterClick} style={{ textDecoration: 'none', fontSize: '0.8rem', color: 'var(--neon-cyan)', fontWeight: 700, letterSpacing: '1px' }}>CHOOSE THIS TRACK →</a>
             </motion.div>
           ))}
         </div>
@@ -352,7 +413,7 @@ const Timeline = () => {
 };
 
 // 20 & 21 & 22. Registration Form
-const Registration = ({ onSubmitRegistration }) => {
+const Registration = ({ onSubmitRegistration, isFormHighlighted }) => {
   const [formData, setFormData] = useState({
     joiningType: 'solo',
     name: '',
@@ -571,7 +632,11 @@ Please help me confirm my seat for AI Sprint 2.0!`;
         </div>
         
         <motion.div variants={fadeUp} style={{ flex: '1 1 500px' }}>
-          <div className="glass-card" style={{ padding: '2.5rem' }}>
+          <div 
+            id="register-form" 
+            className={`glass-card ${isFormHighlighted ? 'form-card-highlight' : ''}`} 
+            style={{ padding: '2.5rem', transition: 'all 0.3s ease' }}
+          >
             <h3 style={{ fontSize: '1.6rem', fontFamily: 'Outfit', fontWeight: 900, marginBottom: '1.5rem', color: '#FFF' }}>
               FREE WORKSHOP REGISTRATION
             </h3>
@@ -630,6 +695,7 @@ Please help me confirm my seat for AI Sprint 2.0!`;
               <div className="form-group">
                 <label>FULL NAME *</label>
                 <input 
+                  id="register-name-input"
                   type="text" 
                   value={formData.name} 
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
@@ -821,7 +887,7 @@ Please help me confirm my seat for AI Sprint 2.0!`;
 };
 
 // 33. Footer
-const Footer = ({ onOpenLogin }) => (
+const Footer = ({ onOpenLogin, onRegisterClick }) => (
   <footer style={{ background: '#000', padding: '4rem 5%', textAlign: 'center', borderTop: '1px solid var(--panel-border)' }}>
     <h2 style={{ fontSize: '2rem', fontFamily: 'Outfit', fontWeight: 900, marginBottom: '0.5rem' }}>Medsquire Technologies Pvt Ltd</h2>
     <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '2rem' }}>Dream • Code • Succeed</p>
@@ -850,6 +916,19 @@ const Footer = ({ onOpenLogin }) => (
       >
         <LogIn size={18} /> Student Login & View Pass
       </button>
+
+      <a 
+        href="#register-form"
+        onClick={onRegisterClick}
+        className="btn-primary"
+        style={{ 
+          padding: '12px 30px', 
+          borderRadius: '30px', 
+          fontSize: '0.95rem'
+        }}
+      >
+        🚀 Register Free
+      </a>
     </div>
     
     <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
@@ -876,6 +955,34 @@ export default function UI() {
   const [isLoadingSeat, setIsLoadingSeat] = useState(false);
   const [isIdModalOpen, setIsIdModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isFormHighlighted, setIsFormHighlighted] = useState(false);
+
+  const handleRegisterClick = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const formElement = document.getElementById('register-form') || document.getElementById('register');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setIsFormHighlighted(true);
+      setTimeout(() => {
+        setIsFormHighlighted(false);
+      }, 2800);
+
+      setTimeout(() => {
+        const nameInput = document.getElementById('register-name-input') || formElement.querySelector('input[type="text"]');
+        if (nameInput) {
+          nameInput.focus({ preventScroll: true });
+        }
+      }, 450);
+    }
+  };
+
+  useEffect(() => {
+    if (window.location.hash === '#register' || window.location.hash === '#register-form') {
+      setTimeout(() => {
+        handleRegisterClick();
+      }, 400);
+    }
+  }, []);
 
   const handleSubmitRegistration = (studentRecord) => {
     setActiveStudent(studentRecord);
@@ -911,12 +1018,13 @@ export default function UI() {
     <>
       <Navigation 
         onOpenLogin={() => setIsLoginModalOpen(true)} 
+        onRegisterClick={handleRegisterClick}
       />
 
-      <Hero />
+      <Hero onRegisterClick={handleRegisterClick} />
       <BenefitsSection />
-      <ConceptSection />
-      <Missions />
+      <ConceptSection onRegisterClick={handleRegisterClick} />
+      <Missions onRegisterClick={handleRegisterClick} />
       <LocationSection />
       <Timeline />
       
@@ -933,14 +1041,18 @@ export default function UI() {
           </div>
           
           <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>YOUR WORKSHOP PRODUCT COULD BE NEXT.</h3>
-          <a href="#register" className="btn-secondary">BUILD MINE →</a>
+          <a href="#register-form" onClick={handleRegisterClick} className="btn-secondary">BUILD MINE →</a>
         </div>
       </section>
 
-      <Registration onSubmitRegistration={handleSubmitRegistration} />
+      <Registration 
+        onSubmitRegistration={handleSubmitRegistration} 
+        isFormHighlighted={isFormHighlighted}
+      />
       
       <Footer 
         onOpenLogin={() => setIsLoginModalOpen(true)} 
+        onRegisterClick={handleRegisterClick}
       />
       
       {/* Registration Seat Allocation Loading Screen */}
@@ -962,6 +1074,7 @@ export default function UI() {
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
+        onOpenRegister={handleRegisterClick}
         onLoginSuccess={(student) => {
           setActiveStudent(student);
           setIsIdModalOpen(true);
@@ -989,7 +1102,7 @@ export default function UI() {
         <button onClick={() => setIsLoginModalOpen(true)} className="btn-secondary" style={{ flex: 1, justifyContent: 'center', fontSize: '0.85rem', padding: '12px' }}>
           🔑 LOGIN / PASS
         </button>
-        <a href="#register" className="btn-primary" style={{ flex: 1.5, justifyContent: 'center', fontSize: '0.85rem', padding: '12px' }}>
+        <a href="#register-form" onClick={handleRegisterClick} className="btn-primary" style={{ flex: 1.5, justifyContent: 'center', fontSize: '0.85rem', padding: '12px' }}>
           🚀 REGISTER FREE
         </a>
       </div>

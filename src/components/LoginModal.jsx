@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { X, Lock, Phone, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { loginStudentApi } from '../utils/api';
 
-export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
+export default function LoginModal({ isOpen, onClose, onLoginSuccess, onOpenRegister }) {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +16,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
     const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
     setPhone(val);
   };
+
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -198,7 +199,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
         </form>
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Haven't registered yet? <a href="#register" onClick={onClose} style={{ color: 'var(--neon-cyan)', fontWeight: 700, textDecoration: 'none' }}>Register for Free</a>
+          Haven't registered yet? <a href="#register-form" onClick={(e) => { onClose(); if (onOpenRegister) onOpenRegister(e); }} style={{ color: 'var(--neon-cyan)', fontWeight: 700, textDecoration: 'none' }}>Register for Free</a>
         </div>
       </motion.div>
     </div>
