@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   ChevronRight, ArrowDown, Laptop, Users, Wrench, 
-  Rocket, Presentation, Award, CheckCircle2, ChevronDown,
-  BrainCircuit, Bot, LineChart, Shield, Database, Globe, 
-  Smartphone, Search, Cpu, LayoutTemplate, Workflow,
-  Activity, Train, GraduationCap, Video, Cpu as Microchip,
-  Menu, X, Coffee, Upload, CreditCard, Sparkles, LogIn, Lock,
-  Eye, EyeOff, MapPin, Phone, Mail, ExternalLink, AlertCircle
+  Rocket, Presentation, Award, Menu, X, Coffee, Upload, 
+  LogIn, Eye, EyeOff, MapPin, Phone, ExternalLink, AlertCircle, Shield
 } from 'lucide-react';
 import IdCardModal from './IdCardModal';
 import LoginModal from './LoginModal';
+import AdminModal from './AdminModal';
 import RegistrationLoadingModal from './RegistrationLoadingModal';
-import MedsquireLogo from './MedsquireLogo';
 import { registerStudentApi, updateTrackApi } from '../utils/api';
 
 const InstagramIcon = ({ size = 18, color = 'currentColor' }) => (
@@ -34,8 +30,7 @@ const staggerContainer = {
 };
 
 // 1. Navigation
-// 1. Navigation
-const Navigation = ({ onOpenLogin, onRegisterClick }) => {
+const Navigation = ({ onOpenLogin, onOpenAdmin, onRegisterClick }) => {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
@@ -81,6 +76,25 @@ const Navigation = ({ onOpenLogin, onRegisterClick }) => {
           }}
         >
           <LogIn size={16} /> LOGIN
+        </button>
+
+        <button 
+          onClick={onOpenAdmin}
+          style={{ 
+            background: 'rgba(255, 214, 0, 0.15)', 
+            border: '1px solid rgba(255, 214, 0, 0.5)', 
+            color: '#FFD600', 
+            padding: '8px 16px', 
+            borderRadius: '8px', 
+            fontWeight: 700, 
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}
+        >
+          <Shield size={16} /> ADMIN
         </button>
 
         <a 
@@ -137,6 +151,26 @@ const Navigation = ({ onOpenLogin, onRegisterClick }) => {
             }}
           >
             <LogIn size={18} /> LOGIN & VIEW PASS
+          </button>
+
+          <button 
+            onClick={() => { setIsOpen(false); onOpenAdmin(); }}
+            style={{ 
+              background: 'rgba(255, 214, 0, 0.15)', 
+              border: '1px solid rgba(255, 214, 0, 0.5)', 
+              color: '#FFD600', 
+              padding: '12px', 
+              borderRadius: '8px', 
+              fontWeight: 700, 
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <Shield size={18} /> ADMIN DASHBOARD
           </button>
 
           <a 
@@ -887,7 +921,7 @@ Please help me confirm my seat for AI Sprint 2.0!`;
 };
 
 // 33. Footer
-const Footer = ({ onOpenLogin, onRegisterClick }) => (
+const Footer = ({ onOpenLogin, onOpenAdmin, onRegisterClick }) => (
   <footer style={{ background: '#000', padding: '4rem 5%', textAlign: 'center', borderTop: '1px solid var(--panel-border)' }}>
     <h2 style={{ fontSize: '2rem', fontFamily: 'Outfit', fontWeight: 900, marginBottom: '0.5rem' }}>Medsquire Technologies Pvt Ltd</h2>
     <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '2rem' }}>Dream • Code • Succeed</p>
@@ -915,6 +949,25 @@ const Footer = ({ onOpenLogin, onRegisterClick }) => (
         }}
       >
         <LogIn size={18} /> Student Login & View Pass
+      </button>
+
+      <button 
+        onClick={onOpenAdmin}
+        style={{ 
+          background: 'rgba(255, 214, 0, 0.15)', 
+          border: '1px solid rgba(255, 214, 0, 0.4)', 
+          color: '#FFD600', 
+          padding: '12px 30px', 
+          borderRadius: '30px', 
+          fontSize: '0.95rem',
+          fontWeight: 700,
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        <Shield size={18} /> Admin Portal
       </button>
 
       <a 
@@ -955,6 +1008,7 @@ export default function UI() {
   const [isLoadingSeat, setIsLoadingSeat] = useState(false);
   const [isIdModalOpen, setIsIdModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isFormHighlighted, setIsFormHighlighted] = useState(false);
 
   const handleRegisterClick = (e) => {
@@ -1018,6 +1072,7 @@ export default function UI() {
     <>
       <Navigation 
         onOpenLogin={() => setIsLoginModalOpen(true)} 
+        onOpenAdmin={() => setIsAdminModalOpen(true)}
         onRegisterClick={handleRegisterClick}
       />
 
@@ -1052,6 +1107,7 @@ export default function UI() {
       
       <Footer 
         onOpenLogin={() => setIsLoginModalOpen(true)} 
+        onOpenAdmin={() => setIsAdminModalOpen(true)}
         onRegisterClick={handleRegisterClick}
       />
       
@@ -1070,12 +1126,22 @@ export default function UI() {
         onUpdateTrack={handleUpdateTrack}
       />
 
-      {/* Login Modal */}
+      {/* Student Login Modal */}
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
         onOpenRegister={handleRegisterClick}
         onLoginSuccess={(student) => {
+          setActiveStudent(student);
+          setIsIdModalOpen(true);
+        }}
+      />
+
+      {/* Admin Login & Registered Students Dashboard Modal */}
+      <AdminModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onSelectStudentPass={(student) => {
           setActiveStudent(student);
           setIsIdModalOpen(true);
         }}

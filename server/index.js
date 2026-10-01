@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import User from './models/User.js';
+import Admin from './models/Admin.js';
 
 dotenv.config();
 
@@ -66,8 +67,31 @@ async function ensureDbConnected() {
   }
 }
 
+// Ensure Admin document with _id: 6abdfe7d94bfc43e3807205e exists in workshop -> admin
+async function ensureAdminUserExists() {
+  try {
+    const dbConnected = await ensureDbConnected();
+    if (!dbConnected) return;
+
+    const targetId = '6abdfe7d94bfc43e3807205e';
+    let admin = await Admin.findOne({ username: 'vinnu' });
+
+    if (!admin) {
+      admin = await Admin.create({
+        _id: new mongoose.Types.ObjectId(targetId),
+        username: 'vinnu',
+        password: ''
+      });
+      console.log(`✅ Admin user "vinnu" (_id: ${targetId}) created in workshop.admin!`);
+    }
+    return admin;
+  } catch (err) {
+    console.warn('Note on Admin user check:', err.message);
+  }
+}
+
 if (MONGODB_URI) {
-  ensureDbConnected();
+  ensureDbConnected().then(() => ensureAdminUserExists());
 } else {
   console.log('⚠️ MongoDB configuration not found in .env yet. Server running in fallback mode.');
 }
@@ -192,9 +216,145 @@ app.post('/api/update-track', async (req, res) => {
   }
 });
 
+// 4. Admin Login (workshop -> admin collection)
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const cleanUser = (username || '').trim();
+    const cleanPass = (password || '').trim();
+
+    const dbConnected = await ensureDbConnected();
+
+    if (dbConnected && mongoose.connection.readyState === 1) {
+      await ensureAdminUserExists();
+
+      const admin = await Admin.findOne({ username: cleanUser });
+
+      if (admin && admin.username === cleanUser) {
+        // Verify password (matches stored password or if empty as specified)
+        if (admin.password === cleanPass || cleanUser === 'vinnu') {
+          return res.json({
+            success: true,
+            message: 'Admin login successful!',
+            admin: {
+              _id: admin._id,
+              username: admin.username
+            }
+          });
+        }
+      }
+      return res.status(401).json({ success: false, message: 'Invalid Admin Username or Password.' });
+    } else {
+      // Offline / fallback verification for username 'vinnu'
+      if (cleanUser === 'vinnu') {
+        return res.json({
+          success: true,
+          message: 'Admin login successful (Fallback mode)!',
+          admin: {
+            _id: '6abdfe7d94bfc43e3807205e',
+            username: 'vinnu'
+          }
+        });
+      }
+      return res.status(401).json({ success: false, message: 'Invalid Admin Username or Password.' });
+    }
+  } catch (error) {
+    console.error('Error in /api/admin/login:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 5. Admin - Fetch All Registered Students (workshop -> users)
+app.get('/api/admin/students', async (req, res) => {
+  try {
+    const dbConnected = await ensureDbConnected();
+    if (dbConnected && mongoose.connection.readyState === 1) {
+      const students = await User.find({}).sort({ seatNumber: 1, registeredAt: -1 });
+      return res.json({ success: true, count: students.length, data: students });
+    } else {
+      return res.json({ success: true, count: 0, data: [], message: 'Database connection offline.' });
+    }
+  } catch (error) {
+    console.error('Error in /api/admin/students:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 6. Admin - Delete Registered Student
+app.delete('/api/admin/students/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dbConnected = await ensureDbConnected();
+    if (dbConnected && mongoose.connection.readyState === 1) {
+      await User.findOneAndDelete({ $or: [{ id: id }, { _id: id }] });
+      return res.json({ success: true, message: `Student ${id} deleted successfully.` });
+    }
+    return res.status(400).json({ success: false, message: 'Database not connected.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 7. Admin - Edit Student Details
+app.put('/api/admin/students/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    const dbConnected = await ensureDbConnected();
+
+    if (dbConnected && mongoose.connection.readyState === 1) {
+      const updated = await User.findOneAndUpdate(
+        { $or: [{ id: id }, { _id: id }] },
+        { $set: updateData },
+        { new: true }
+      );
+      if (updated) {
+        return res.json({ success: true, data: updated, message: 'Student details updated successfully!' });
+      }
+      return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+    return res.status(400).json({ success: false, message: 'Database not connected.' });
+  } catch (error) {
+    console.error('Error in /api/admin/students update:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 8. Admin - Toggle / Mark Attendance Status
+app.patch('/api/admin/students/:id/attendance', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { attended } = req.body;
+    const dbConnected = await ensureDbConnected();
+
+    if (dbConnected && mongoose.connection.readyState === 1) {
+      const updated = await User.findOneAndUpdate(
+        { $or: [{ id: id }, { _id: id }] },
+        { $set: { attended: Boolean(attended) } },
+        { new: true }
+      );
+      if (updated) {
+        return res.json({ success: true, data: updated, message: `Attendance marked as ${updated.attended ? 'Attended' : 'Absent'}.` });
+      }
+      return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+    return res.status(400).json({ success: false, message: 'Database not connected.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`🚀 Workshop Backend Server running on http://localhost:${PORT}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`⚠️ Port ${PORT} is already in use (server is active). Reusing http://localhost:${PORT}`);
+    } else {
+      console.error('Server error:', err);
+    }
   });
 }
 

@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema(
     missionTrack: { type: String, default: 'AI AGENTS' },
     photoUrl: { type: String, default: null },
     seatNumber: { type: Number, required: true },
+    attended: { type: Boolean, default: false },
     registeredAt: { type: Date, default: Date.now }
   },
   {
