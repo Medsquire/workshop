@@ -14,6 +14,16 @@ const corsOrigin = process.env.CORS_ORIGIN || '*';
 app.use(cors({ origin: corsOrigin === '*' ? '*' : corsOrigin.split(',') }));
 app.use(express.json({ limit: '10mb' }));
 
+// Helper to safely construct Mongo query without Mongoose CastError for string IDs (e.g., MS26-A83F91)
+function buildQueryById(id) {
+  if (!id) return { id: '' };
+  // Check if id is a valid 24-character hexadecimal ObjectId
+  if (mongoose.Types.ObjectId.isValid(id) && String(new mongoose.Types.ObjectId(id)) === id) {
+    return { $or: [{ id: id }, { _id: id }] };
+  }
+  return { id: id };
+}
+
 // Helper to construct MongoDB Connection String
 function getMongoURI() {
   if (process.env.MONGODB_URI) {
@@ -286,11 +296,13 @@ app.delete('/api/admin/students/:id', async (req, res) => {
     const { id } = req.params;
     const dbConnected = await ensureDbConnected();
     if (dbConnected && mongoose.connection.readyState === 1) {
-      await User.findOneAndDelete({ $or: [{ id: id }, { _id: id }] });
+      const query = buildQueryById(id);
+      await User.findOneAndDelete(query);
       return res.json({ success: true, message: `Student ${id} deleted successfully.` });
     }
     return res.status(400).json({ success: false, message: 'Database not connected.' });
   } catch (error) {
+    console.error('Error in /api/admin/students delete:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -299,12 +311,15 @@ app.delete('/api/admin/students/:id', async (req, res) => {
 app.put('/api/admin/students/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const updateData = { ...req.body };
+    delete updateData._id; // Prevent updating Mongo _id field
+
     const dbConnected = await ensureDbConnected();
 
     if (dbConnected && mongoose.connection.readyState === 1) {
+      const query = buildQueryById(id);
       const updated = await User.findOneAndUpdate(
-        { $or: [{ id: id }, { _id: id }] },
+        query,
         { $set: updateData },
         { new: true }
       );
@@ -328,8 +343,9 @@ app.patch('/api/admin/students/:id/attendance', async (req, res) => {
     const dbConnected = await ensureDbConnected();
 
     if (dbConnected && mongoose.connection.readyState === 1) {
+      const query = buildQueryById(id);
       const updated = await User.findOneAndUpdate(
-        { $or: [{ id: id }, { _id: id }] },
+        query,
         { $set: { attended: Boolean(attended) } },
         { new: true }
       );
@@ -340,6 +356,7 @@ app.patch('/api/admin/students/:id/attendance', async (req, res) => {
     }
     return res.status(400).json({ success: false, message: 'Database not connected.' });
   } catch (error) {
+    console.error('Error in /api/admin/students attendance update:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

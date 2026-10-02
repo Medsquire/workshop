@@ -22,22 +22,24 @@ const WhatsAppIcon = ({ size = 16, color = '#25D366' }) => (
 );
 
 export function getWhatsAppInvitationText(studentName = '', seatNumber = '') {
-  const greeting = studentName ? `Hello ${studentName},` : `Hello,`;
-  const seatInfo = seatNumber ? ` Seat #${seatNumber}.` : '';
+  const greeting = studentName ? `Good morning ${studentName},` : `Good morning,`;
+  const seatInfo = seatNumber ? ` (Seat #${seatNumber})` : '';
 
   return `${greeting}
 
-Reminder: Tomorrow Full-Stack AI Product Building Workshop (AI Sprint 2.0).${seatInfo}
+Today's Full-Stack AI Product Building Workshop (AI Sprint 2026) starts at 10:00 AM.${seatInfo}
 
-Everyone should attend on time.
+Please be on time at the location.
 
-Timing: 10:00 AM to 4:00 PM
+Timing: 10:00 AM to 04:00 PM
 Requirement: Bring your laptop
-AI Workshop: Come with your friends
 
-Map Location: https://maps.app.goo.gl/wDcgmHU7wFTEZwX1A
-Contact Us: 90143 12221
+Venue Location: Medsquire Technologies Pvt Ltd, One Town, Kathepu St, Paidichintapadu, Eluru, Andhra Pradesh - 534001
+Google Map Link: https://maps.app.goo.gl/qwfNdAiyeYb1mnVd9
 
+Contact Us / WhatsApp: 90143 12221
+
+Regards,
 Medsquire Technologies`;
 }
 
